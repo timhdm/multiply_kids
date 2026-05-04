@@ -3,483 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Trainer 2026</title>
+    <title>MEGALAND</title>
     <style>
         :root {
-            --bg: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --accent: #38bdf8;
-            --success: #4ade80;
-            --error: #f87171;
-            --text: #f1f5f9;
+            --bg: #0a0a0a;
+            --card-bg: #111111;
+            --accent: #ffffff;
+            --text: #888888;
             --font: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             background-color: var(--bg);
-            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, var(--bg) 70%);
-            color: var(--text);
+            color: var(--accent);
             font-family: var(--font);
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 480px;
-            padding: 2rem;
-            perspective: 1000px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 2.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-
-        h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
-        p { color: #94a3b8; margin-bottom: 2rem; }
-
-        .btn {
-            background: var(--accent);
-            color: #0f172a;
-            border: none;
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-            margin-top: 1rem;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3); }
-        .btn:active { transform: translateY(0); }
-        .btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text); }
-        .btn-secondary:hover { background: rgba(255,255,255,0.05); }
-
-        /* Game Screen */
-        .stats {
             display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: #94a3b8;
-            margin-bottom: 2rem;
-            font-variant-numeric: tabular-nums;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
         }
 
-        .problem {
-            font-size: 4rem;
-            font-weight: 700;
-            margin: 2rem 0;
-            font-variant-numeric: tabular-nums;
-            line-height: 1;
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, #fff 0%, #666 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        input[type="number"] {
-            background: rgba(0, 0, 0, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 2.5rem;
-            padding: 0.5rem;
-            border-radius: 16px;
-            width: 140px;
-            text-align: center;
-            outline: none;
-            transition: border-color 0.2s;
-            -moz-appearance: textfield;
-        }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input:focus { border-color: var(--accent); }
-
-        .feedback {
-            height: 24px;
-            margin-top: 1rem;
-            font-weight: 600;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .feedback.visible { opacity: 1; }
-        .feedback.correct { color: var(--success); }
-        .feedback.wrong { color: var(--error); }
-
-        /* Animations */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        .shake { animation: shake 0.3s ease-in-out; }
-
-        .hidden { display: none; }
-        
-        /* Progress Bar */
-        .progress-container {
+        .projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
             width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-            margin-top: 2rem;
+            max-width: 900px;
+        }
+
+        .project-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
             overflow: hidden;
         }
-        .progress-bar {
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.3s ease;
+
+        .project-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .project-card:hover::before {
+            opacity: 1;
+        }
+
+        .project-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .project-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .project-desc {
+            color: var(--text);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .project-status {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+            font-size: 0.75rem;
+            color: var(--text);
+        }
+
+        @media (max-width: 640px) {
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .projects {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <!-- Start Screen -->
-    <div id="start-screen" class="card">
-        <h1>Тренажер таблицы</h1>
-        <p>Умножение и деление.<br>Фокус на ошибках.</p>
-        <button class="btn" onclick="game.start()">Начать тренировку</button>
+    <div class="logo">MEGALAND</div>
+    
+    <div class="projects">
+        <a href="/projects/math-trainer/" class="project-card">
+            <div class="project-icon">🧮</div>
+            <div class="project-title">Тренажёр таблицы умножения</div>
+            <div class="project-desc">Умная система обучения с адаптивным повторением ошибок</div>
+            <div class="project-status">Активно</div>
+        </a>
     </div>
 
-    <!-- Game Screen -->
-    <div id="game-screen" class="card hidden">
-        <div class="stats">
-            <span id="timer">00:00</span>
-            <span id="score">Ошибки: 0</span>
-        </div>
-        <div class="problem" id="problem">2 × 2</div>
-        <input type="number" id="answer-input" placeholder="?" autocomplete="off">
-        <div class="feedback" id="feedback"></div>
-        <div class="progress-container">
-            <div class="progress-bar" id="progress"></div>
-        </div>
-    </div>
-
-    <!-- Result Screen -->
-    <div id="result-screen" class="card hidden">
-        <h1>Результат</h1>
-        <p id="result-stats">Время: 00:00<br>Ошибок: 0</p>
-        <button class="btn" onclick="game.start()">Еще раз</button>
-        <button class="btn btn-secondary" onclick="game.resetStats()" style="margin-top: 10px;">Сбросить прогресс ошибок</button>
-    </div>
-</div>
-
-<script>
-/**
- * Math Trainer 2026 - Enhanced with Phased Learning
- * Phase 1: Assessment (collect baseline data across multiplication table)
- * Phase 2: Focused Training (mix of weak spots + full table review)
- * Uses LocalStorage with spaced repetition for error tracking
- */
-const STORAGE_KEY = 'math_trainer_v2';
-const ASSESSMENT_SESSIONS_REQUIRED = 3; // Number of sessions to complete before focused training
-
-class MathTrainer {
-    constructor() {
-        this.data = this.loadData();
-        this.currentProblem = null;
-        this.startTime = null;
-        this.timerInterval = null;
-        this.errorCount = 0;
-        this.totalQuestions = 0;
-        this.targetQuestions = 30;
-        this.sessionErrors = []; // Track errors in current session
-        
-        // DOM Elements
-        this.screens = {
-            start: document.getElementById('start-screen'),
-            game: document.getElementById('game-screen'),
-            result: document.getElementById('result-screen')
-        };
-        this.elProblem = document.getElementById('problem');
-        this.elInput = document.getElementById('answer-input');
-        this.elFeedback = document.getElementById('feedback');
-        this.elTimer = document.getElementById('timer');
-        this.elScore = document.getElementById('score');
-        this.elProgress = document.getElementById('progress');
-        this.elResultStats = document.getElementById('result-stats');
-
-        // Bind Enter key
-        this.elInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') this.checkAnswer();
+    <script>
+        // Add subtle animation on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.project-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
         });
-        
-        this.updateStartScreen();
-    }
-
-    loadData() {
-        try {
-            const data = localStorage.getItem(STORAGE_KEY);
-            if (data) {
-                const parsed = JSON.parse(data);
-                // Ensure structure exists
-                if (!parsed.errors) parsed.errors = {};
-                if (!parsed.sessions) parsed.sessions = 0;
-                if (!parsed.lastReview) parsed.lastReview = {};
-                return parsed;
-            }
-        } catch (e) {
-            console.error('Failed to load data:', e);
-        }
-        return { errors: {}, sessions: 0, lastReview: {}, history: [] };
-    }
-
-    saveData() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-    }
-
-    resetStats() {
-        if (confirm('Вы уверены? Вся история обучения будет удалена.')) {
-            localStorage.removeItem(STORAGE_KEY);
-            this.data = { errors: {}, sessions: 0, lastReview: {}, history: [] };
-            alert('История обучения очищена');
-            this.updateStartScreen();
-        }
-    }
-
-    showScreen(name) {
-        Object.values(this.screens).forEach(el => el.classList.add('hidden'));
-        this.screens[name].classList.remove('hidden');
-    }
-
-    updateStartScreen() {
-        const startScreen = document.getElementById('start-screen');
-        const phase = this.getCurrentPhase();
-        const pElement = startScreen.querySelector('p');
-        
-        if (phase === 'assessment') {
-            const remaining = ASSESSMENT_SESSIONS_REQUIRED - this.data.sessions;
-            pElement.innerHTML = `Этап 1: Оценка знаний<br>Пройдено сессий: ${this.data.sessions}/${ASSESSMENT_SESSIONS_REQUIRED}<br>Осталось: ${remaining}`;
-        } else {
-            const weakCount = Object.keys(this.data.errors).filter(k => this.data.errors[k] > 0).length;
-            pElement.innerHTML = `Этап 2: Тренировка<br>Слабых мест: ${weakCount}<br>Умная система повторений`;
-        }
-    }
-
-    getCurrentPhase() {
-        return this.data.sessions < ASSESSMENT_SESSIONS_REQUIRED ? 'assessment' : 'training';
-    }
-
-    generateNumber(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    getAllMultiplicationFacts() {
-        // Generate all unique multiplication facts (2x2 to 9x9)
-        const facts = [];
-        for (let a = 2; a <= 9; a++) {
-            for (let b = a; b <= 9; b++) {
-                facts.push({ a, b });
-            }
-        }
-        return facts;
-    }
-
-    getWeightedRandomProblem() {
-        const phase = this.getCurrentPhase();
-        let a, b, isDivision;
-
-        if (phase === 'assessment') {
-            // Phase 1: Pure random across entire table to gather baseline data
-            a = this.generateNumber(2, 9);
-            b = this.generateNumber(2, 9);
-            isDivision = Math.random() > 0.5;
-        } else {
-            // Phase 2: Smart mix - 40% weak spots, 60% full table review
-            const weakKeys = Object.keys(this.data.errors).filter(k => this.data.errors[k] > 0);
-            
-            if (weakKeys.length > 0 && Math.random() < 0.4) {
-                // Pick from weak spots with weighted probability
-                const totalWeight = weakKeys.reduce((sum, k) => sum + this.data.errors[k], 0);
-                let random = Math.random() * totalWeight;
-                let selectedKey = weakKeys[0];
-                
-                for (const key of weakKeys) {
-                    random -= this.data.errors[key];
-                    if (random <= 0) {
-                        selectedKey = key;
-                        break;
-                    }
-                }
-                
-                const parts = selectedKey.split('x');
-                a = parseInt(parts[0]);
-                b = parseInt(parts[1]);
-            } else {
-                // Random from full table
-                a = this.generateNumber(2, 9);
-                b = this.generateNumber(2, 9);
-            }
-            isDivision = Math.random() > 0.5;
-        }
-
-        // Ensure variety (swap operands randomly)
-        if (Math.random() > 0.5 && a !== b) [a, b] = [b, a];
-
-        const multiplicationAnswer = a * b;
-        
-        if (isDivision) {
-            this.currentProblem = {
-                text: `${multiplicationAnswer} ÷ ${a}`,
-                answer: b,
-                key: `${Math.min(a,b)}x${Math.max(a,b)}`
-            };
-        } else {
-            this.currentProblem = {
-                text: `${a} × ${b}`,
-                answer: multiplicationAnswer,
-                key: `${Math.min(a,b)}x${Math.max(a,b)}`
-            };
-        }
-    }
-
-    renderProblem() {
-        this.elProblem.textContent = this.currentProblem.text;
-        this.elInput.value = '';
-        this.elInput.focus();
-        this.elFeedback.className = 'feedback';
-        
-        // Update progress
-        const pct = (this.totalQuestions / this.targetQuestions) * 100;
-        this.elProgress.style.width = `${Math.min(pct, 100)}%`;
-    }
-
-    start() {
-        this.errorCount = 0;
-        this.totalQuestions = 0;
-        this.sessionErrors = [];
-        this.startTime = Date.now();
-        this.showScreen('game');
-        this.updateTimer();
-        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
-        this.nextQuestion();
-    }
-
-    nextQuestion() {
-        if (this.totalQuestions >= this.targetQuestions) {
-            this.finish();
-            return;
-        }
-        this.getWeightedRandomProblem();
-        this.renderProblem();
-    }
-
-    checkAnswer() {
-        const userVal = parseInt(this.elInput.value);
-        if (isNaN(userVal)) return;
-
-        this.totalQuestions++;
-        
-        if (userVal === this.currentProblem.answer) {
-            this.handleSuccess();
-        } else {
-            this.handleError();
-        }
-        
-        this.elScore.textContent = `Ошибки: ${this.errorCount}`;
-        setTimeout(() => this.nextQuestion(), 600);
-    }
-
-    handleSuccess() {
-        this.elFeedback.textContent = 'Верно!';
-        this.elFeedback.className = 'feedback visible correct';
-        
-        // In training phase, decrease error weight on success (spaced repetition)
-        if (this.data.sessions >= ASSESSMENT_SESSIONS_REQUIRED) {
-            const key = this.currentProblem.key;
-            if (this.data.errors[key] && this.data.errors[key] > 0) {
-                this.data.errors[key]--;
-                // Remove if fully mastered
-                if (this.data.errors[key] <= 0) {
-                    delete this.data.errors[key];
-                }
-            }
-            this.saveData();
-        }
-    }
-
-    handleError() {
-        this.errorCount++;
-        this.sessionErrors.push(this.currentProblem.key);
-        
-        this.elFeedback.textContent = `Ошибка! Правильно: ${this.currentProblem.answer}`;
-        this.elFeedback.className = 'feedback visible wrong';
-        this.screens.game.classList.add('shake');
-        setTimeout(() => this.screens.game.classList.remove('shake'), 300);
-        
-        // Always track errors, but weighting depends on phase
-        const key = this.currentProblem.key;
-        
-        if (this.data.sessions >= ASSESSMENT_SESSIONS_REQUIRED) {
-            // Training phase: increase weight significantly
-            this.data.errors[key] = (this.data.errors[key] || 0) + 3;
-        } else {
-            // Assessment phase: just mark as seen with minimal weight
-            if (!this.data.errors[key]) {
-                this.data.errors[key] = 1;
-            }
-        }
-        
-        this.saveData();
-    }
-
-    updateTimer() {
-        const delta = Math.floor((Date.now() - this.startTime) / 1000);
-        const m = Math.floor(delta / 60).toString().padStart(2, '0');
-        const s = (delta % 60).toString().padStart(2, '0');
-        this.elTimer.textContent = `${m}:${s}`;
-    }
-
-    finish() {
-        clearInterval(this.timerInterval);
-        
-        // Increment session count
-        this.data.sessions++;
-        
-        // Save session history
-        this.data.history.push({
-            date: new Date().toISOString(),
-            errors: this.errorCount,
-            time: this.elTimer.textContent,
-            phase: this.getCurrentPhase()
-        });
-        
-        // Keep only last 50 sessions in history
-        if (this.data.history.length > 50) {
-            this.data.history = this.data.history.slice(-50);
-        }
-        
-        this.saveData();
-        
-        this.showScreen('result');
-        const timeStr = this.elTimer.textContent;
-        
-        let phaseInfo = '';
-        if (this.getCurrentPhase() === 'assessment') {
-            const remaining = ASSESSMENT_SESSIONS_REQUIRED - this.data.sessions;
-            if (remaining > 0) {
-                phaseInfo = `<br><small>До этапа тренировки: ${remaining} сессий</small>`;
-            } else {
-                phaseInfo = `<br><small style="color: var(--success)">Оценка завершена! Переходим к тренировке.</small>`;
-            }
-        }
-        
-        this.elResultStats.innerHTML = `Время: ${timeStr}<br>Ошибок: ${this.errorCount}<br>Всего примеров: ${this.targetQuestions}${phaseInfo}`;
-        this.updateStartScreen();
-    }
-}
-
-const game = new MathTrainer();
-</script>
+    </script>
 </body>
 </html>

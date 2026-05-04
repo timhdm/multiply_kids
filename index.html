@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Trainer 2026</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #38bdf8;
+            --success: #4ade80;
+            --error: #f87171;
+            --text: #f1f5f9;
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, var(--bg) 70%);
+            color: var(--text);
+            font-family: var(--font);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+            perspective: 1000px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+        p { color: #94a3b8; margin-bottom: 2rem; }
+
+        .btn {
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3); }
+        .btn:active { transform: translateY(0); }
+        .btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+
+        /* Game Screen */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .problem {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 2rem 0;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        input[type="number"] {
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 2.5rem;
+            padding: 0.5rem;
+            border-radius: 16px;
+            width: 140px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+            -moz-appearance: textfield;
+        }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input:focus { border-color: var(--accent); }
+
+        .feedback {
+            height: 24px;
+            margin-top: 1rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .feedback.visible { opacity: 1; }
+        .feedback.correct { color: var(--success); }
+        .feedback.wrong { color: var(--error); }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; }
+
+        .hidden { display: none; }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin-top: 2rem;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Start Screen -->
+    <div id="start-screen" class="card">
+        <h1>Тренажер таблицы</h1>
+        <p>Умножение и деление.<br>Фокус на ошибках.</p>
+        <button class="btn" onclick="game.start()">Начать тренировку</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="card hidden">
+        <div class="stats">
+            <span id="timer">00:00</span>
+            <span id="score">Ошибки: 0</span>
+        </div>
+        <div class="problem" id="problem">2 × 2</div>
+        <input type="number" id="answer-input" placeholder="?" autocomplete="off">
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="card hidden">
+        <h1>Результат</h1>
+        <p id="result-stats">Время: 00:00<br>Ошибок: 0</p>
+        <button class="btn" onclick="game.start()">Еще раз</button>
+        <button class="btn btn-secondary" onclick="game.resetStats()" style="margin-top: 10px;">Сбросить прогресс ошибок</button>
+    </div>
+</div>
+
+<script>
+/**
+ * Logic for Math Trainer
+ * Uses LocalStorage for persistence across reloads (session-like behavior for user convenience)
+ * but clears on explicit reset.
+ */
+const STORAGE_KEY = 'math_trainer_weights_v1';
+
+class MathTrainer {
+    constructor() {
+        this.weights = this.loadWeights(); // { "2x2": 1, "3x4": 5 } - higher is more frequent
+        this.currentProblem = null;
+        this.startTime = null;
+        this.timerInterval = null;
+        this.errorCount = 0;
+        this.totalQuestions = 0;
+        this.targetQuestions = 30; // Questions per session
+        
+        // DOM Elements
+        this.screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-screen'),
+            result: document.getElementById('result-screen')
+        };
+        this.elProblem = document.getElementById('problem');
+        this.elInput = document.getElementById('answer-input');
+        this.elFeedback = document.getElementById('feedback');
+        this.elTimer = document.getElementById('timer');
+        this.elScore = document.getElementById('score');
+        this.elProgress = document.getElementById('progress');
+        this.elResultStats = document.getElementById('result-stats');
+
+        // Bind Enter key
+        this.elInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.checkAnswer();
+        });
+    }
+
+    loadWeights() {
+        try {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : {};
+        } catch { return {}; }
+    }
+
+    saveWeights() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.weights));
+    }
+
+    resetStats() {
+        localStorage.removeItem(STORAGE_KEY);
+        this.weights = {};
+        alert('История ошибок очищена');
+    }
+
+    showScreen(name) {
+        Object.values(this.screens).forEach(el => el.classList.add('hidden'));
+        this.screens[name].classList.remove('hidden');
+    }
+
+    generateNumber(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    getWeightedRandomProblem() {
+        // 30% chance to get a problem with high weight (mistake history)
+        // 70% chance for random problem
+        const keys = Object.keys(this.weights);
+        const hasHistory = keys.length > 0;
+        
+        let a, b, isDivision, answer;
+
+        // Try to pick from history if available and random roll succeeds
+        if (hasHistory && Math.random() < 0.4) {
+            // Weighted selection
+            const totalWeight = keys.reduce((sum, k) => sum + this.weights[k], 0);
+            let random = Math.random() * totalWeight;
+            let selectedKey = keys[0];
+            
+            for (const key of keys) {
+                random -= this.weights[key];
+                if (random <= 0) {
+                    selectedKey = key;
+                    break;
+                }
+            }
+            
+            // Parse key "axb" or "axb_div"
+            if (selectedKey.includes('_div')) {
+                // It was stored as division logic? No, we store base multiplication facts
+                // Let's normalize storage: always store "min x max" pair
+                const parts = selectedKey.replace('_div','').split('x');
+                a = parseInt(parts[0]);
+                b = parseInt(parts[1]);
+                isDivision = true; // Force division for review
+            } else {
+                const parts = selectedKey.split('x');
+                a = parseInt(parts[0]);
+                b = parseInt(parts[1]);
+                isDivision = Math.random() > 0.5; // Randomly choose mul or div for review
+            }
+        } else {
+            // Pure random generation
+            a = this.generateNumber(2, 9);
+            b = this.generateNumber(2, 9);
+            isDivision = Math.random() > 0.5;
+        }
+
+        // Ensure variety
+        if (Math.random() > 0.5) [a, b] = [b, a];
+
+        const multiplicationAnswer = a * b;
+        
+        if (isDivision) {
+            // Question: (a*b) / a = b
+            this.currentProblem = {
+                text: `${multiplicationAnswer} ÷ ${a}`,
+                answer: b,
+                key: `${Math.min(a,b)}x${Math.max(a,b)}` // Key is always based on the multiplication fact
+            };
+        } else {
+            this.currentProblem = {
+                text: `${a} × ${b}`,
+                answer: multiplicationAnswer,
+                key: `${Math.min(a,b)}x${Math.max(a,b)}`
+            };
+        }
+    }
+
+    renderProblem() {
+        this.elProblem.textContent = this.currentProblem.text;
+        this.elInput.value = '';
+        this.elInput.focus();
+        this.elFeedback.className = 'feedback';
+        
+        // Update progress
+        const pct = (this.totalQuestions / this.targetQuestions) * 100;
+        this.elProgress.style.width = `${Math.min(pct, 100)}%`;
+    }
+
+    start() {
+        this.errorCount = 0;
+        this.totalQuestions = 0;
+        this.startTime = Date.now();
+        this.showScreen('game');
+        this.updateTimer();
+        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+        this.nextQuestion();
+    }
+
+    nextQuestion() {
+        if (this.totalQuestions >= this.targetQuestions) {
+            this.finish();
+            return;
+        }
+        this.getWeightedRandomProblem();
+        this.renderProblem();
+    }
+
+    checkAnswer() {
+        const userVal = parseInt(this.elInput.value);
+        if (isNaN(userVal)) return;
+
+        this.totalQuestions++;
+        
+        if (userVal === this.currentProblem.answer) {
+            // Correct
+            this.handleSuccess();
+        } else {
+            // Wrong
+            this.handleError();
+        }
+        
+        this.elScore.textContent = `Ошибки: ${this.errorCount}`;
+        setTimeout(() => this.nextQuestion(), 600); // Small delay for feedback
+    }
+
+    handleSuccess() {
+        this.elFeedback.textContent = 'Верно!';
+        this.elFeedback.className = 'feedback visible correct';
+        // Decrease weight slightly on success to prioritize other weak spots, but don't remove completely
+        if (this.weights[this.currentProblem.key] > 0) {
+            this.weights[this.currentProblem.key]--;
+        }
+        this.saveWeights();
+    }
+
+    handleError() {
+        this.errorCount++;
+        this.elFeedback.textContent = `Ошибка! Правильно: ${this.currentProblem.answer}`;
+        this.elFeedback.className = 'feedback visible wrong';
+        this.screens.game.classList.add('shake');
+        setTimeout(() => this.screens.game.classList.remove('shake'), 300);
+        
+        // Increase weight significantly
+        this.weights[this.currentProblem.key] = (this.weights[this.currentProblem.key] || 0) + 3;
+        this.saveWeights();
+    }
+
+    updateTimer() {
+        const delta = Math.floor((Date.now() - this.startTime) / 1000);
+        const m = Math.floor(delta / 60).toString().padStart(2, '0');
+        const s = (delta % 60).toString().padStart(2, '0');
+        this.elTimer.textContent = `${m}:${s}`;
+    }
+
+    finish() {
+        clearInterval(this.timerInterval);
+        this.showScreen('result');
+        const timeStr = this.elTimer.textContent;
+        this.elResultStats.innerHTML = `Время: ${timeStr}<br>Ошибок: ${this.errorCount}<br>Всего примеров: ${this.targetQuestions}`;
+    }
+}
+
+const game = new MathTrainer();
+</script>
+</body>
+</html>

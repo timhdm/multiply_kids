@@ -85,6 +85,30 @@
             margin: 2rem 0;
             font-variant-numeric: tabular-nums;
             line-height: 1;
+            position: relative;
+        }
+
+        .timer-bar {
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .timer-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+        .timer-bar-fill.warning {
+            background: #fbbf24;
+        }
+        .timer-bar-fill.danger {
+            background: var(--error);
         }
 
         input[type="number"] {
@@ -157,7 +181,10 @@
             <span id="timer">00:00</span>
             <span id="score">Ошибки: 0</span>
         </div>
-        <div class="problem" id="problem">2 × 2</div>
+        <div class="problem" id="problem">
+            2 × 2
+            <div class="timer-bar"><div class="timer-bar-fill" id="timer-bar-fill"></div></div>
+        </div>
         <input type="number" id="answer-input" placeholder="?" autocomplete="off">
         <div class="feedback" id="feedback"></div>
         <div class="progress-container">
@@ -190,6 +217,7 @@ class MathTrainer {
         this.currentProblem = null;
         this.startTime = null;
         this.timerInterval = null;
+        this.answerTimer = null; // Timer for 5-second answer limit
         this.errorCount = 0;
         this.totalQuestions = 0;
         this.targetQuestions = 30;
@@ -208,6 +236,7 @@ class MathTrainer {
         this.elScore = document.getElementById('score');
         this.elProgress = document.getElementById('progress');
         this.elResultStats = document.getElementById('result-stats');
+        this.elTimerBarFill = document.getElementById('timer-bar-fill');
 
         // Bind Enter key
         this.elInput.addEventListener('keydown', (e) => {
@@ -344,14 +373,78 @@ class MathTrainer {
     }
 
     renderProblem() {
-        this.elProblem.textContent = this.currentProblem.text;
+        this.elProblem.firstChild.textContent = this.currentProblem.text;
         this.elInput.value = '';
         this.elInput.focus();
         this.elFeedback.className = 'feedback';
         
+        // Reset and start answer timer (5 seconds)
+        this.resetAnswerTimer();
+        
         // Update progress
         const pct = (this.totalQuestions / this.targetQuestions) * 100;
         this.elProgress.style.width = `${Math.min(pct, 100)}%`;
+    }
+
+    resetAnswerTimer() {
+        if (this.answerTimer) {
+            clearInterval(this.answerTimer);
+        }
+        
+        const totalTime = 5000; // 5 seconds
+        const intervalTime = 50; // update every 50ms
+        let elapsed = 0;
+        
+        // Reset bar
+        this.elTimerBarFill.style.width = '100%';
+        this.elTimerBarFill.className = 'timer-bar-fill';
+        
+        this.answerTimer = setInterval(() => {
+            elapsed += intervalTime;
+            const remaining = totalTime - elapsed;
+            const pct = (remaining / totalTime) * 100;
+            
+            this.elTimerBarFill.style.width = `${pct}%`;
+            
+            // Change color based on remaining time
+            if (pct < 30) {
+                this.elTimerBarFill.className = 'timer-bar-fill danger';
+            } else if (pct < 60) {
+                this.elTimerBarFill.className = 'timer-bar-fill warning';
+            }
+            
+            if (elapsed >= totalTime) {
+                clearInterval(this.answerTimer);
+                this.handleTimeout();
+            }
+        }, intervalTime);
+    }
+
+    handleTimeout() {
+        this.totalQuestions++;
+        this.errorCount++;
+        this.sessionErrors.push(this.currentProblem.key);
+        
+        // Show correct answer
+        this.elFeedback.textContent = `Время вышло! Правильно: ${this.currentProblem.answer}`;
+        this.elFeedback.className = 'feedback visible wrong';
+        this.screens.game.classList.add('shake');
+        setTimeout(() => this.screens.game.classList.remove('shake'), 300);
+        
+        // Track error
+        const key = this.currentProblem.key;
+        if (this.data.sessions >= ASSESSMENT_SESSIONS_REQUIRED) {
+            this.data.errors[key] = (this.data.errors[key] || 0) + 3;
+        } else {
+            if (!this.data.errors[key]) {
+                this.data.errors[key] = 1;
+            }
+        }
+        this.saveData();
+        this.elScore.textContent = `Ошибки: ${this.errorCount}`;
+        
+        // Pause 1.5 seconds to memorize
+        setTimeout(() => this.nextQuestion(), 1500);
     }
 
     start() {
@@ -378,16 +471,23 @@ class MathTrainer {
         const userVal = parseInt(this.elInput.value);
         if (isNaN(userVal)) return;
 
+        // Clear answer timer
+        if (this.answerTimer) {
+            clearInterval(this.answerTimer);
+        }
+
         this.totalQuestions++;
         
         if (userVal === this.currentProblem.answer) {
             this.handleSuccess();
+            setTimeout(() => this.nextQuestion(), 600);
         } else {
             this.handleError();
+            // Пауза 1.5 секунды чтобы ребенок запомнил правильный ответ
+            setTimeout(() => this.nextQuestion(), 1500);
         }
         
         this.elScore.textContent = `Ошибки: ${this.errorCount}`;
-        setTimeout(() => this.nextQuestion(), 600);
     }
 
     handleSuccess() {
@@ -442,6 +542,11 @@ class MathTrainer {
 
     finish() {
         clearInterval(this.timerInterval);
+        
+        // Clear answer timer if running
+        if (this.answerTimer) {
+            clearInterval(this.answerTimer);
+        }
         
         // Increment session count
         this.data.sessions++;

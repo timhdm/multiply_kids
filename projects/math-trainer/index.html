@@ -132,11 +132,32 @@
             margin-top: 1rem;
             font-weight: 600;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: all 0.3s ease;
         }
         .feedback.visible { opacity: 1; }
         .feedback.correct { color: var(--success); }
         .feedback.wrong { color: var(--error); }
+        
+        /* Special style for correct answer display after mistake - big, bright, with effect */
+        .feedback.correct-answer-highlight {
+            color: #4ade80;
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.8), 0 0 40px rgba(74, 222, 128, 0.4);
+            animation: pulse-glow 1s ease-in-out infinite alternate;
+            letter-spacing: 0.05em;
+        }
+        
+        @keyframes pulse-glow {
+            from {
+                text-shadow: 0 0 20px rgba(74, 222, 128, 0.8), 0 0 40px rgba(74, 222, 128, 0.4);
+                transform: scale(1);
+            }
+            to {
+                text-shadow: 0 0 30px rgba(74, 222, 128, 1), 0 0 60px rgba(74, 222, 128, 0.6), 0 0 80px rgba(74, 222, 128, 0.3);
+                transform: scale(1.05);
+            }
+        }
 
         /* Animations */
         @keyframes shake {
@@ -425,11 +446,17 @@ class MathTrainer {
         this.errorCount++;
         this.sessionErrors.push(this.currentProblem.key);
         
-        // Show correct answer
-        this.elFeedback.textContent = `Время вышло! Правильно: ${this.currentProblem.answer}`;
+        // First show timeout message briefly
+        this.elFeedback.textContent = `Время вышло!`;
         this.elFeedback.className = 'feedback visible wrong';
         this.screens.game.classList.add('shake');
         setTimeout(() => this.screens.game.classList.remove('shake'), 300);
+        
+        // Then highlight the correct answer with big, bright, glowing effect
+        setTimeout(() => {
+            this.elFeedback.textContent = `${this.currentProblem.answer}`;
+            this.elFeedback.className = 'feedback visible correct-answer-highlight';
+        }, 400);
         
         // Track error
         const key = this.currentProblem.key;
@@ -512,10 +539,17 @@ class MathTrainer {
         this.errorCount++;
         this.sessionErrors.push(this.currentProblem.key);
         
-        this.elFeedback.textContent = `Ошибка! Правильно: ${this.currentProblem.answer}`;
+        // First show error message briefly
+        this.elFeedback.textContent = `Ошибка!`;
         this.elFeedback.className = 'feedback visible wrong';
         this.screens.game.classList.add('shake');
         setTimeout(() => this.screens.game.classList.remove('shake'), 300);
+        
+        // Then highlight the correct answer with big, bright, glowing effect
+        setTimeout(() => {
+            this.elFeedback.textContent = `${this.currentProblem.answer}`;
+            this.elFeedback.className = 'feedback visible correct-answer-highlight';
+        }, 400);
         
         // Always track errors, but weighting depends on phase
         const key = this.currentProblem.key;

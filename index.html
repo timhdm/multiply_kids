@@ -176,21 +176,24 @@
 
 <script>
 /**
- * Logic for Math Trainer
- * Uses LocalStorage for persistence across reloads (session-like behavior for user convenience)
- * but clears on explicit reset.
+ * Math Trainer 2026 - Enhanced with Phased Learning
+ * Phase 1: Assessment (collect baseline data across multiplication table)
+ * Phase 2: Focused Training (mix of weak spots + full table review)
+ * Uses LocalStorage with spaced repetition for error tracking
  */
-const STORAGE_KEY = 'math_trainer_weights_v1';
+const STORAGE_KEY = 'math_trainer_v2';
+const ASSESSMENT_SESSIONS_REQUIRED = 3; // Number of sessions to complete before focused training
 
 class MathTrainer {
     constructor() {
-        this.weights = this.loadWeights(); // { "2x2": 1, "3x4": 5 } - higher is more frequent
+        this.data = this.loadData();
         this.currentProblem = null;
         this.startTime = null;
         this.timerInterval = null;
         this.errorCount = 0;
         this.totalQuestions = 0;
-        this.targetQuestions = 30; // Questions per session
+        this.targetQuestions = 30;
+        this.sessionErrors = []; // Track errors in current session
         
         // DOM Elements
         this.screens = {
@@ -210,23 +213,38 @@ class MathTrainer {
         this.elInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') this.checkAnswer();
         });
+        
+        this.updateStartScreen();
     }
 
-    loadWeights() {
+    loadData() {
         try {
             const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : {};
-        } catch { return {}; }
+            if (data) {
+                const parsed = JSON.parse(data);
+                // Ensure structure exists
+                if (!parsed.errors) parsed.errors = {};
+                if (!parsed.sessions) parsed.sessions = 0;
+                if (!parsed.lastReview) parsed.lastReview = {};
+                return parsed;
+            }
+        } catch (e) {
+            console.error('Failed to load data:', e);
+        }
+        return { errors: {}, sessions: 0, lastReview: {}, history: [] };
     }
 
-    saveWeights() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.weights));
+    saveData() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
     }
 
     resetStats() {
-        localStorage.removeItem(STORAGE_KEY);
-        this.weights = {};
-        alert('История ошибок очищена');
+        if (confirm('Вы уверены? Вся история обучения будет удалена.')) {
+            localStorage.removeItem(STORAGE_KEY);
+            this.data = { errors: {}, sessions: 0, lastReview: {}, history: [] };
+            alert('История обучения очищена');
+            this.updateStartScreen();
+        }
     }
 
     showScreen(name) {
@@ -234,65 +252,87 @@ class MathTrainer {
         this.screens[name].classList.remove('hidden');
     }
 
+    updateStartScreen() {
+        const startScreen = document.getElementById('start-screen');
+        const phase = this.getCurrentPhase();
+        const pElement = startScreen.querySelector('p');
+        
+        if (phase === 'assessment') {
+            const remaining = ASSESSMENT_SESSIONS_REQUIRED - this.data.sessions;
+            pElement.innerHTML = `Этап 1: Оценка знаний<br>Пройдено сессий: ${this.data.sessions}/${ASSESSMENT_SESSIONS_REQUIRED}<br>Осталось: ${remaining}`;
+        } else {
+            const weakCount = Object.keys(this.data.errors).filter(k => this.data.errors[k] > 0).length;
+            pElement.innerHTML = `Этап 2: Тренировка<br>Слабых мест: ${weakCount}<br>Умная система повторений`;
+        }
+    }
+
+    getCurrentPhase() {
+        return this.data.sessions < ASSESSMENT_SESSIONS_REQUIRED ? 'assessment' : 'training';
+    }
+
     generateNumber(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    getWeightedRandomProblem() {
-        // 30% chance to get a problem with high weight (mistake history)
-        // 70% chance for random problem
-        const keys = Object.keys(this.weights);
-        const hasHistory = keys.length > 0;
-        
-        let a, b, isDivision, answer;
+    getAllMultiplicationFacts() {
+        // Generate all unique multiplication facts (2x2 to 9x9)
+        const facts = [];
+        for (let a = 2; a <= 9; a++) {
+            for (let b = a; b <= 9; b++) {
+                facts.push({ a, b });
+            }
+        }
+        return facts;
+    }
 
-        // Try to pick from history if available and random roll succeeds
-        if (hasHistory && Math.random() < 0.4) {
-            // Weighted selection
-            const totalWeight = keys.reduce((sum, k) => sum + this.weights[k], 0);
-            let random = Math.random() * totalWeight;
-            let selectedKey = keys[0];
-            
-            for (const key of keys) {
-                random -= this.weights[key];
-                if (random <= 0) {
-                    selectedKey = key;
-                    break;
-                }
-            }
-            
-            // Parse key "axb" or "axb_div"
-            if (selectedKey.includes('_div')) {
-                // It was stored as division logic? No, we store base multiplication facts
-                // Let's normalize storage: always store "min x max" pair
-                const parts = selectedKey.replace('_div','').split('x');
-                a = parseInt(parts[0]);
-                b = parseInt(parts[1]);
-                isDivision = true; // Force division for review
-            } else {
-                const parts = selectedKey.split('x');
-                a = parseInt(parts[0]);
-                b = parseInt(parts[1]);
-                isDivision = Math.random() > 0.5; // Randomly choose mul or div for review
-            }
-        } else {
-            // Pure random generation
+    getWeightedRandomProblem() {
+        const phase = this.getCurrentPhase();
+        let a, b, isDivision;
+
+        if (phase === 'assessment') {
+            // Phase 1: Pure random across entire table to gather baseline data
             a = this.generateNumber(2, 9);
             b = this.generateNumber(2, 9);
             isDivision = Math.random() > 0.5;
+        } else {
+            // Phase 2: Smart mix - 40% weak spots, 60% full table review
+            const weakKeys = Object.keys(this.data.errors).filter(k => this.data.errors[k] > 0);
+            
+            if (weakKeys.length > 0 && Math.random() < 0.4) {
+                // Pick from weak spots with weighted probability
+                const totalWeight = weakKeys.reduce((sum, k) => sum + this.data.errors[k], 0);
+                let random = Math.random() * totalWeight;
+                let selectedKey = weakKeys[0];
+                
+                for (const key of weakKeys) {
+                    random -= this.data.errors[key];
+                    if (random <= 0) {
+                        selectedKey = key;
+                        break;
+                    }
+                }
+                
+                const parts = selectedKey.split('x');
+                a = parseInt(parts[0]);
+                b = parseInt(parts[1]);
+            } else {
+                // Random from full table
+                a = this.generateNumber(2, 9);
+                b = this.generateNumber(2, 9);
+            }
+            isDivision = Math.random() > 0.5;
         }
 
-        // Ensure variety
-        if (Math.random() > 0.5) [a, b] = [b, a];
+        // Ensure variety (swap operands randomly)
+        if (Math.random() > 0.5 && a !== b) [a, b] = [b, a];
 
         const multiplicationAnswer = a * b;
         
         if (isDivision) {
-            // Question: (a*b) / a = b
             this.currentProblem = {
                 text: `${multiplicationAnswer} ÷ ${a}`,
                 answer: b,
-                key: `${Math.min(a,b)}x${Math.max(a,b)}` // Key is always based on the multiplication fact
+                key: `${Math.min(a,b)}x${Math.max(a,b)}`
             };
         } else {
             this.currentProblem = {
@@ -317,6 +357,7 @@ class MathTrainer {
     start() {
         this.errorCount = 0;
         this.totalQuestions = 0;
+        this.sessionErrors = [];
         this.startTime = Date.now();
         this.showScreen('game');
         this.updateTimer();
@@ -340,37 +381,56 @@ class MathTrainer {
         this.totalQuestions++;
         
         if (userVal === this.currentProblem.answer) {
-            // Correct
             this.handleSuccess();
         } else {
-            // Wrong
             this.handleError();
         }
         
         this.elScore.textContent = `Ошибки: ${this.errorCount}`;
-        setTimeout(() => this.nextQuestion(), 600); // Small delay for feedback
+        setTimeout(() => this.nextQuestion(), 600);
     }
 
     handleSuccess() {
         this.elFeedback.textContent = 'Верно!';
         this.elFeedback.className = 'feedback visible correct';
-        // Decrease weight slightly on success to prioritize other weak spots, but don't remove completely
-        if (this.weights[this.currentProblem.key] > 0) {
-            this.weights[this.currentProblem.key]--;
+        
+        // In training phase, decrease error weight on success (spaced repetition)
+        if (this.data.sessions >= ASSESSMENT_SESSIONS_REQUIRED) {
+            const key = this.currentProblem.key;
+            if (this.data.errors[key] && this.data.errors[key] > 0) {
+                this.data.errors[key]--;
+                // Remove if fully mastered
+                if (this.data.errors[key] <= 0) {
+                    delete this.data.errors[key];
+                }
+            }
+            this.saveData();
         }
-        this.saveWeights();
     }
 
     handleError() {
         this.errorCount++;
+        this.sessionErrors.push(this.currentProblem.key);
+        
         this.elFeedback.textContent = `Ошибка! Правильно: ${this.currentProblem.answer}`;
         this.elFeedback.className = 'feedback visible wrong';
         this.screens.game.classList.add('shake');
         setTimeout(() => this.screens.game.classList.remove('shake'), 300);
         
-        // Increase weight significantly
-        this.weights[this.currentProblem.key] = (this.weights[this.currentProblem.key] || 0) + 3;
-        this.saveWeights();
+        // Always track errors, but weighting depends on phase
+        const key = this.currentProblem.key;
+        
+        if (this.data.sessions >= ASSESSMENT_SESSIONS_REQUIRED) {
+            // Training phase: increase weight significantly
+            this.data.errors[key] = (this.data.errors[key] || 0) + 3;
+        } else {
+            // Assessment phase: just mark as seen with minimal weight
+            if (!this.data.errors[key]) {
+                this.data.errors[key] = 1;
+            }
+        }
+        
+        this.saveData();
     }
 
     updateTimer() {
@@ -382,9 +442,40 @@ class MathTrainer {
 
     finish() {
         clearInterval(this.timerInterval);
+        
+        // Increment session count
+        this.data.sessions++;
+        
+        // Save session history
+        this.data.history.push({
+            date: new Date().toISOString(),
+            errors: this.errorCount,
+            time: this.elTimer.textContent,
+            phase: this.getCurrentPhase()
+        });
+        
+        // Keep only last 50 sessions in history
+        if (this.data.history.length > 50) {
+            this.data.history = this.data.history.slice(-50);
+        }
+        
+        this.saveData();
+        
         this.showScreen('result');
         const timeStr = this.elTimer.textContent;
-        this.elResultStats.innerHTML = `Время: ${timeStr}<br>Ошибок: ${this.errorCount}<br>Всего примеров: ${this.targetQuestions}`;
+        
+        let phaseInfo = '';
+        if (this.getCurrentPhase() === 'assessment') {
+            const remaining = ASSESSMENT_SESSIONS_REQUIRED - this.data.sessions;
+            if (remaining > 0) {
+                phaseInfo = `<br><small>До этапа тренировки: ${remaining} сессий</small>`;
+            } else {
+                phaseInfo = `<br><small style="color: var(--success)">Оценка завершена! Переходим к тренировке.</small>`;
+            }
+        }
+        
+        this.elResultStats.innerHTML = `Время: ${timeStr}<br>Ошибок: ${this.errorCount}<br>Всего примеров: ${this.targetQuestions}${phaseInfo}`;
+        this.updateStartScreen();
     }
 }
 

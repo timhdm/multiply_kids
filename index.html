@@ -388,8 +388,6 @@
             </div>
 
             <button class="btn" onclick="game.start()">Еще раз</button>
-            <button class="btn btn-secondary" onclick="game.resetStats()" style="margin-top: 10px;">Сбросить прогресс
-                ошибок</button>
         </div>
     </div>
 
@@ -398,9 +396,9 @@
          * Math Trainer 2026
          *
          * Простая схема занятия:
-         * - 30 основных примеров;
-         * - если слабых мест нет — все 30 обычные;
-         * - если слабые места есть — 20 обычных + 10 на слабые места;
+         * - 25 основных примеров;
+         * - если слабых мест нет — все 25 обычные;
+         * - если слабые места есть — 20 обычных + 5 на слабые места;
          * - ошибка: +2 к весу слабого примера;
          * - правильный ответ по слабому примеру: -1;
          * - доля вопросов из накопленных слабых мест задаётся WEAK_SHARE;
@@ -473,6 +471,22 @@
                         if (!Array.isArray(parsed.history)) parsed.history = [];
                         if (!parsed.lastReview || typeof parsed.lastReview !== 'object') parsed.lastReview = {};
 
+                        // Старые версии объединяли умножение и деление ключом вида 7x8.
+                        // Ретроспективно определить операцию невозможно, поэтому сохраняем
+                        // накопленный вес за соответствующим навыком умножения.
+                        for (const [key, weight] of Object.entries(parsed.errors)) {
+                            const legacyMatch = key.match(/^(\d+)x(\d+)$/);
+                            if (!legacyMatch) continue;
+
+                            const a = Number(legacyMatch[1]);
+                            const b = Number(legacyMatch[2]);
+                            const newKey = this.getMultiplicationKey(a, b);
+
+                            parsed.errors[newKey] =
+                                (Number(parsed.errors[newKey]) || 0) + (Number(weight) || 0);
+                            delete parsed.errors[key];
+                        }
+
                         return parsed;
                     }
                 } catch (e) {
@@ -489,17 +503,6 @@
 
             saveData() {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-            }
-
-            resetStats() {
-                if (confirm('Сбросить накопленные слабые места? История занятий останется.')) {
-                    this.data.errors = {};
-                    this.data.lastReview = {};
-                    this.saveData();
-
-                    alert('Прогресс ошибок сброшен');
-                    this.updateStartScreen();
-                }
             }
 
             showScreen(name) {
@@ -554,46 +557,83 @@
                 return facts;
             }
 
-            factToProblem(fact, forceDivision = null, source = 'regular') {
-                let a = fact.a;
-                let b = fact.b;
+            getMultiplicationKey(a, b) {
+                return `mul:${Math.min(a, b)}x${Math.max(a, b)}`;
+            }
+
+            getDivisionKey(dividend, divisor) {
+                return `div:${dividend}/${divisor}`;
+            }
+
+            getAllSkills() {
+                const skills = [];
+
+                for (const fact of this.getAllMultiplicationFacts()) {
+                    const { a, b } = fact;
+                    const product = a * b;
+
+                    skills.push({
+                        a,
+                        b,
+                        operation: 'multiplication',
+                        key: this.getMultiplicationKey(a, b)
+                    });
+
+                    skills.push({
+                        dividend: product,
+                        divisor: a,
+                        answer: b,
+                        operation: 'division',
+                        key: this.getDivisionKey(product, a)
+                    });
+
+                    if (a !== b) {
+                        skills.push({
+                            dividend: product,
+                            divisor: b,
+                            answer: a,
+                            operation: 'division',
+                            key: this.getDivisionKey(product, b)
+                        });
+                    }
+                }
+
+                return skills;
+            }
+
+            skillToProblem(skill, source = 'regular') {
+                if (skill.operation === 'division') {
+                    return {
+                        text: `${skill.dividend} ÷ ${skill.divisor}`,
+                        answer: skill.answer,
+                        key: skill.key,
+                        source
+                    };
+                }
+
+                let a = skill.a;
+                let b = skill.b;
 
                 // Иногда меняем множители местами, чтобы ребёнок не запоминал форму.
                 if (Math.random() > 0.5 && a !== b) {
                     [a, b] = [b, a];
                 }
 
-                const isDivision = forceDivision === null
-                    ? Math.random() > 0.5
-                    : forceDivision;
-
-                const multiplicationAnswer = a * b;
-
-                if (isDivision) {
-                    return {
-                        text: `${multiplicationAnswer} ÷ ${a}`,
-                        answer: b,
-                        key: `${Math.min(a, b)}x${Math.max(a, b)}`,
-                        source
-                    };
-                }
-
                 return {
                     text: `${a} × ${b}`,
-                    answer: multiplicationAnswer,
-                    key: `${Math.min(a, b)}x${Math.max(a, b)}`,
+                    answer: a * b,
+                    key: skill.key,
                     source
                 };
             }
 
-            getWeakFacts() {
-                const allFacts = this.getAllMultiplicationFacts();
-                const factMap = new Map(allFacts.map(fact => [fact.key, fact]));
+            getWeakSkills() {
+                const skillMap = new Map(this.getAllSkills().map(skill => [skill.key, skill]));
 
                 return Object.entries(this.data.errors)
-                    .filter(([key, weight]) => factMap.has(key) && Number(weight) > 0)
+                    .filter(([key, weight]) => skillMap.has(key) && Number(weight) > 0)
                     .map(([key, weight]) => ({
-                        ...factMap.get(key),
+                        ...skillMap.get(key),
                         weight: Number(weight)
                     }));
             }
@@ -611,39 +651,54 @@
             }
 
             buildSessionQueue() {
-                const allFacts = this.getAllMultiplicationFacts();
-                const weakFacts = this.getWeakFacts();
+                const allSkills = this.getAllSkills();
+                const weakSkills = this.getWeakSkills();
                 const result = [];
 
                 // Доля урока, которую отдаём накопленным слабым местам.
-                // Например: 30 × 0.2 = 6 слабых + 24 обычных.
-                const weakCount = weakFacts.length > 0
+                // Например: 25 × 0.2 = 5 слабых + 20 обычных.
+                const weakCount = weakSkills.length > 0
                     ? Math.floor(QUESTIONS_PER_SESSION * WEAK_SHARE)
                     : 0;
 
                 // Слабые вопросы выбираются с учётом веса ошибки.
                 for (let i = 0; i < weakCount; i++) {
-                    const fact = this.pickWeightedFact(weakFacts);
-                    result.push(this.factToProblem(fact, null, 'weak'));
+                    const skill = this.pickWeightedFact(weakSkills);
+                    result.push(this.skillToProblem(skill, 'weak'));
                 }
 
                 const regularCount = QUESTIONS_PER_SESSION - weakCount;
 
-                // Для обычной части сначала стараемся использовать факты,
+                // Для обычной части сначала стараемся использовать навыки,
                 // которые не относятся к накопленным слабым местам.
-                const weakKeys = new Set(weakFacts.map(fact => fact.key));
-                let regularFacts = allFacts.filter(fact => !weakKeys.has(fact.key));
+                const weakKeys = new Set(weakSkills.map(skill => skill.key));
+                const availableSkills = allSkills.filter(skill => !weakKeys.has(skill.key));
+                const multiplicationSkills = this.shuffle(
+                    availableSkills.filter(skill => skill.operation === 'multiplication')
+                );
+                const divisionSkills = this.shuffle(
+                    availableSkills.filter(skill => skill.operation === 'division')
+                );
+                const multiplicationCount = Math.ceil(regularCount / 2);
+                const regularSkills = [
+                    ...multiplicationSkills.slice(0, multiplicationCount),
+                    ...divisionSkills.slice(0, regularCount - multiplicationCount)
+                ];
 
-                if (regularFacts.length < regularCount) {
-                    regularFacts = allFacts;
+                // Если почти вся таблица уже отмечена как слабая, дополняем урок
+                // оставшимися навыками, сохраняя общее число вопросов.
+                if (regularSkills.length < regularCount) {
+                    const selectedKeys = new Set(regularSkills.map(skill => skill.key));
+                    const fallbackSkills = this.shuffle(allSkills)
+                        .filter(skill => !selectedKeys.has(skill.key));
+
+                    regularSkills.push(
+                        ...fallbackSkills.slice(0, regularCount - regularSkills.length)
+                    );
                 }
 
-                // В обычной части по возможности не повторяем один и тот же факт.
-                const shuffledFacts = this.shuffle(regularFacts);
-
-                for (let i = 0; i < regularCount; i++) {
-                    const fact = shuffledFacts[i % shuffledFacts.length];
-                    result.push(this.factToProblem(fact, null, 'regular'));
+                for (const skill of regularSkills) {
+                    result.push(this.skillToProblem(skill, 'regular'));
                 }
 
                 // Смешиваем слабые и обычные вопросы.
@@ -686,15 +741,10 @@
                     return false;
                 }
 
-                const fact = this.getAllMultiplicationFacts()
-                    .find(item => item.key === problem.key);
-
-                if (!fact) {
-                    return false;
-                }
-
-                this.sessionQueue[replaceIndex] =
-                    this.factToProblem(fact, null, 'retry');
+                this.sessionQueue[replaceIndex] = {
+                    ...problem,
+                    source: 'retry'
+                };
 
                 return true;
             }

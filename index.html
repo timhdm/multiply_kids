@@ -1,156 +1,1112 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEGALAND</title>
+    <title>Math Trainer 2026</title>
     <style>
         :root {
-            --bg: #0a0a0a;
-            --card-bg: #111111;
-            --accent: #ffffff;
-            --text: #888888;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #38bdf8;
+            --success: #4ade80;
+            --error: #f87171;
+            --text: #f1f5f9;
             --font: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
             background-color: var(--bg);
-            color: var(--accent);
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, var(--bg) 70%);
+            color: var(--text);
             font-family: var(--font);
-            min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            padding: 2rem;
-        }
-
-        .logo {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            margin-bottom: 3rem;
-            background: linear-gradient(135deg, #fff 0%, #666 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .projects {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            width: 100%;
-            max-width: 900px;
-        }
-
-        .project-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 2rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: inherit;
-            position: relative;
+            align-items: center;
+            min-height: 100vh;
             overflow: hidden;
         }
 
-        .project-card:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+            perspective: 1000px;
         }
 
-        .project-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
-        .project-card:hover::before {
-            opacity: 1;
-        }
-
-        .project-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            opacity: 0.8;
-        }
-
-        .project-title {
-            font-size: 1.25rem;
+        h1 {
+            font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
             letter-spacing: -0.02em;
         }
 
-        .project-desc {
-            color: var(--text);
-            font-size: 0.9rem;
-            line-height: 1.5;
+        p {
+            color: #94a3b8;
+            margin-bottom: 2rem;
         }
 
-        .project-status {
-            display: inline-block;
+        .btn {
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
             margin-top: 1rem;
-            padding: 0.25rem 0.75rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 999px;
-            font-size: 0.75rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: var(--text);
         }
 
-        @media (max-width: 640px) {
-            .logo {
-                font-size: 2rem;
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Game Screen */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .problem {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 2rem 0;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            position: relative;
+        }
+
+        .timer-bar {
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .timer-bar-fill.warning {
+            background: #fbbf24;
+        }
+
+        .timer-bar-fill.danger {
+            background: var(--error);
+        }
+
+        input[type="number"] {
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 2.5rem;
+            padding: 0.5rem;
+            border-radius: 16px;
+            width: 140px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+            -moz-appearance: textfield;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        .feedback {
+            height: 24px;
+            margin-top: 1rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .feedback.visible {
+            opacity: 1;
+        }
+
+        .feedback.correct {
+            color: var(--success);
+        }
+
+        .feedback.wrong {
+            color: var(--error);
+        }
+
+        /* Special style for correct answer display after mistake - big, bright, with effect */
+        .feedback.correct-answer-highlight {
+            color: #4ade80;
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-shadow: 0 0 25px rgba(74, 222, 128, 0.9), 0 0 50px rgba(74, 222, 128, 0.5);
+            animation: pulse-glow 1s ease-in-out infinite alternate;
+            letter-spacing: 0.08em;
+        }
+
+        @keyframes pulse-glow {
+            from {
+                text-shadow: 0 0 20px rgba(74, 222, 128, 0.8), 0 0 40px rgba(74, 222, 128, 0.4);
+                transform: scale(1);
             }
-            
-            .projects {
-                grid-template-columns: 1fr;
+
+            to {
+                text-shadow: 0 0 30px rgba(74, 222, 128, 1), 0 0 60px rgba(74, 222, 128, 0.6), 0 0 80px rgba(74, 222, 128, 0.3);
+                transform: scale(1.05);
+            }
+        }
+
+        /* Animations */
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Weekly Results */
+        .weekly-results {
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .weekly-results h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin: 0 0 0.75rem;
+            text-align: center;
+        }
+
+        .weekly-table-wrap {
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .weekly-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .weekly-table th,
+        .weekly-table td {
+            padding: 0.65rem 0.55rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            white-space: nowrap;
+        }
+
+        .weekly-table th {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.72rem;
+        }
+
+        .weekly-table td {
+            color: var(--text);
+        }
+
+        .weekly-table th:not(:first-child),
+        .weekly-table td:not(:first-child) {
+            text-align: right;
+        }
+
+        .weekly-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .weekly-table tr.today td {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .result-summary {
+            margin-bottom: 0.5rem;
+        }
+
+        .result-score {
+            color: var(--text);
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        @media (max-width: 520px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.6rem;
+            }
+
+            .weekly-table th,
+            .weekly-table td {
+                padding: 0.6rem 0.4rem;
             }
         }
     </style>
 </head>
+
 <body>
-    <div class="logo">MEGALAND</div>
-    
-    <div class="projects">
-        <a href="/projects/math-trainer/" class="project-card">
-            <div class="project-icon">🧮</div>
-            <div class="project-title">Тренажёр таблицы умножения</div>
-            <div class="project-desc">Умная система обучения с адаптивным повторением ошибок</div>
-            <div class="project-status">Активно</div>
-        </a>
+
+    <div class="container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="card">
+            <h1>Тренажер таблицы</h1>
+            <p>Умножение и деление.<br>Фокус на ошибках.</p>
+            <button class="btn" onclick="game.start()">Начать тренировку</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="card hidden">
+            <div class="stats">
+                <span id="timer">00:00</span>
+                <span id="score">Ошибки: 0</span>
+            </div>
+            <div class="problem" id="problem">
+                2 × 2
+                <div class="timer-bar">
+                    <div class="timer-bar-fill" id="timer-bar-fill"></div>
+                </div>
+            </div>
+            <input type="number" id="answer-input" placeholder="?" autocomplete="off">
+            <div class="feedback" id="feedback"></div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="card hidden">
+            <h1>Результат</h1>
+            <div id="result-stats" class="result-summary">
+                <div class="result-score">0 из 30 правильно</div>
+                <p>Время: 00:00<br>Ошибок: 0</p>
+            </div>
+
+            <div class="weekly-results">
+                <h2>Последние 7 дней</h2>
+                <div class="weekly-table-wrap">
+                    <table class="weekly-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Занятий</th>
+                                <th>Время</th>
+                                <th>Результат</th>
+                            </tr>
+                        </thead>
+                        <tbody id="weekly-results-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <button class="btn" onclick="game.start()">Еще раз</button>
+            <button class="btn btn-secondary" onclick="game.resetStats()" style="margin-top: 10px;">Сбросить прогресс
+                ошибок</button>
+        </div>
     </div>
 
     <script>
-        // Add subtle animation on load
-        document.addEventListener('DOMContentLoaded', () => {
-            const cards = document.querySelectorAll('.project-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
+        /**
+         * Math Trainer 2026
+         *
+         * Простая схема занятия:
+         * - 30 основных примеров;
+         * - если слабых мест нет — все 30 обычные;
+         * - если слабые места есть — 20 обычных + 10 на слабые места;
+         * - ошибка: +2 к весу слабого примера;
+         * - правильный ответ по слабому примеру: -1;
+         * - доля вопросов из накопленных слабых мест задаётся WEAK_SHARE;
+         * - ошибка может заменить один будущий обычный вопрос повторением через 5–8 позиций;
+         * - никаких дополнительных вопросов сверх QUESTIONS_PER_SESSION не создаётся.
+         *
+         * Всё хранится локально в браузере, без сервера.
+         */
+
+        const STORAGE_KEY = 'math_trainer_v2';
+
+        const QUESTIONS_PER_SESSION = 2;
+        const WEAK_SHARE = 0.2;
+        const ERROR_WEIGHT_ADD = 2;
+        const CORRECT_WEIGHT_SUBTRACT = 1;
+        const RETRY_AFTER_MIN = 5;
+        const RETRY_AFTER_MAX = 8;
+        const HISTORY_DAYS_TO_KEEP = 90;
+
+        class MathTrainer {
+            constructor() {
+                this.data = this.loadData();
+
+                this.currentProblem = null;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.answerTimer = null;
+
+                this.errorCount = 0;          // Ошибки среди всех вопросов текущего занятия
+                this.totalQuestions = 0;      // Сколько вопросов занятия отвечено
+                this.targetQuestions = QUESTIONS_PER_SESSION;
+
+                this.sessionQueue = [];       // Все вопросы текущего занятия
+                this.queueIndex = 0;
+
+                // DOM Elements
+                this.screens = {
+                    start: document.getElementById('start-screen'),
+                    game: document.getElementById('game-screen'),
+                    result: document.getElementById('result-screen')
+                };
+
+                this.elProblem = document.getElementById('problem');
+                this.elInput = document.getElementById('answer-input');
+                this.elFeedback = document.getElementById('feedback');
+                this.elTimer = document.getElementById('timer');
+                this.elScore = document.getElementById('score');
+                this.elProgress = document.getElementById('progress');
+                this.elResultStats = document.getElementById('result-stats');
+                this.elTimerBarFill = document.getElementById('timer-bar-fill');
+                this.elWeeklyResultsBody = document.getElementById('weekly-results-body');
+
+                this.elInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') this.checkAnswer();
+                });
+
+                this.updateStartScreen();
+            }
+
+            loadData() {
+                try {
+                    const data = localStorage.getItem(STORAGE_KEY);
+
+                    if (data) {
+                        const parsed = JSON.parse(data);
+
+                        // Совместимость с уже существующим localStorage.
+                        if (!parsed.errors || typeof parsed.errors !== 'object') parsed.errors = {};
+                        if (!Number.isFinite(parsed.sessions)) parsed.sessions = 0;
+                        if (!Array.isArray(parsed.history)) parsed.history = [];
+                        if (!parsed.lastReview || typeof parsed.lastReview !== 'object') parsed.lastReview = {};
+
+                        return parsed;
+                    }
+                } catch (e) {
+                    console.error('Failed to load data:', e);
+                }
+
+                return {
+                    errors: {},
+                    sessions: 0,
+                    lastReview: {},
+                    history: []
+                };
+            }
+
+            saveData() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+            }
+
+            resetStats() {
+                if (confirm('Сбросить накопленные слабые места? История занятий останется.')) {
+                    this.data.errors = {};
+                    this.data.lastReview = {};
+                    this.saveData();
+
+                    alert('Прогресс ошибок сброшен');
+                    this.updateStartScreen();
+                }
+            }
+
+            showScreen(name) {
+                Object.values(this.screens).forEach(el => el.classList.add('hidden'));
+                this.screens[name].classList.remove('hidden');
+            }
+
+            updateStartScreen() {
+                const startScreen = document.getElementById('start-screen');
+                const pElement = startScreen.querySelector('p');
+                const weakCount = Object.keys(this.data.errors)
+                    .filter(key => Number(this.data.errors[key]) > 0)
+                    .length;
+
+                if (weakCount > 0) {
+                    pElement.innerHTML = `Умножение и деление.<br>Слабых мест: ${weakCount}`;
+                } else {
+                    pElement.innerHTML = 'Умножение и деление.<br>Фокус на ошибках.';
+                }
+            }
+
+            generateNumber(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            shuffle(array) {
+                const result = [...array];
+
+                for (let i = result.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [result[i], result[j]] = [result[j], result[i]];
+                }
+
+                return result;
+            }
+
+            getAllMultiplicationFacts() {
+                // Уникальные факты таблицы: 2×2 ... 9×9.
+                // 7×8 и 8×7 считаем одним и тем же знанием.
+                const facts = [];
+
+                for (let a = 2; a <= 9; a++) {
+                    for (let b = a; b <= 9; b++) {
+                        facts.push({
+                            a,
+                            b,
+                            key: `${a}x${b}`
+                        });
+                    }
+                }
+
+                return facts;
+            }
+
+            factToProblem(fact, forceDivision = null, source = 'regular') {
+                let a = fact.a;
+                let b = fact.b;
+
+                // Иногда меняем множители местами, чтобы ребёнок не запоминал форму.
+                if (Math.random() > 0.5 && a !== b) {
+                    [a, b] = [b, a];
+                }
+
+                const isDivision = forceDivision === null
+                    ? Math.random() > 0.5
+                    : forceDivision;
+
+                const multiplicationAnswer = a * b;
+
+                if (isDivision) {
+                    return {
+                        text: `${multiplicationAnswer} ÷ ${a}`,
+                        answer: b,
+                        key: `${Math.min(a, b)}x${Math.max(a, b)}`,
+                        source
+                    };
+                }
+
+                return {
+                    text: `${a} × ${b}`,
+                    answer: multiplicationAnswer,
+                    key: `${Math.min(a, b)}x${Math.max(a, b)}`,
+                    source
+                };
+            }
+
+            getWeakFacts() {
+                const allFacts = this.getAllMultiplicationFacts();
+                const factMap = new Map(allFacts.map(fact => [fact.key, fact]));
+
+                return Object.entries(this.data.errors)
+                    .filter(([key, weight]) => factMap.has(key) && Number(weight) > 0)
+                    .map(([key, weight]) => ({
+                        ...factMap.get(key),
+                        weight: Number(weight)
+                    }));
+            }
+
+            pickWeightedFact(facts) {
+                const totalWeight = facts.reduce((sum, fact) => sum + fact.weight, 0);
+                let random = Math.random() * totalWeight;
+
+                for (const fact of facts) {
+                    random -= fact.weight;
+                    if (random <= 0) return fact;
+                }
+
+                return facts[facts.length - 1];
+            }
+
+            buildSessionQueue() {
+                const allFacts = this.getAllMultiplicationFacts();
+                const weakFacts = this.getWeakFacts();
+                const result = [];
+
+                // Доля урока, которую отдаём накопленным слабым местам.
+                // Например: 30 × 0.2 = 6 слабых + 24 обычных.
+                const weakCount = weakFacts.length > 0
+                    ? Math.floor(QUESTIONS_PER_SESSION * WEAK_SHARE)
+                    : 0;
+
+                // Слабые вопросы выбираются с учётом веса ошибки.
+                for (let i = 0; i < weakCount; i++) {
+                    const fact = this.pickWeightedFact(weakFacts);
+                    result.push(this.factToProblem(fact, null, 'weak'));
+                }
+
+                const regularCount = QUESTIONS_PER_SESSION - weakCount;
+
+                // Для обычной части сначала стараемся использовать факты,
+                // которые не относятся к накопленным слабым местам.
+                const weakKeys = new Set(weakFacts.map(fact => fact.key));
+                let regularFacts = allFacts.filter(fact => !weakKeys.has(fact.key));
+
+                if (regularFacts.length < regularCount) {
+                    regularFacts = allFacts;
+                }
+
+                // В обычной части по возможности не повторяем один и тот же факт.
+                const shuffledFacts = this.shuffle(regularFacts);
+
+                for (let i = 0; i < regularCount; i++) {
+                    const fact = shuffledFacts[i % shuffledFacts.length];
+                    result.push(this.factToProblem(fact, null, 'regular'));
+                }
+
+                // Смешиваем слабые и обычные вопросы.
+                return this.shuffle(result);
+            }
+
+            scheduleRetry(problem) {
+                const afterQuestions = this.generateNumber(RETRY_AFTER_MIN, RETRY_AFTER_MAX);
+
+                // queueIndex уже указывает на следующий ещё не показанный вопрос.
+                // Ищем обычный вопрос примерно через 5–8 позиций и ЗАМЕНЯЕМ его.
+                const desiredIndex = this.queueIndex + afterQuestions - 1;
+
+                if (desiredIndex >= this.sessionQueue.length) {
+                    return false;
+                }
+
+                // Сначала ищем обычный вопрос начиная с желаемой позиции.
+                let replaceIndex = -1;
+
+                for (let i = desiredIndex; i < this.sessionQueue.length; i++) {
+                    if (this.sessionQueue[i].source === 'regular') {
+                        replaceIndex = i;
+                        break;
+                    }
+                }
+
+                // Если после желаемой позиции обычных вопросов нет,
+                // пробуем участок между текущей позицией и desiredIndex.
+                if (replaceIndex === -1) {
+                    for (let i = desiredIndex - 1; i >= this.queueIndex; i--) {
+                        if (this.sessionQueue[i].source === 'regular') {
+                            replaceIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (replaceIndex === -1) {
+                    return false;
+                }
+
+                const fact = this.getAllMultiplicationFacts()
+                    .find(item => item.key === problem.key);
+
+                if (!fact) {
+                    return false;
+                }
+
+                this.sessionQueue[replaceIndex] =
+                    this.factToProblem(fact, null, 'retry');
+
+                return true;
+            }
+
+            getNextProblem() {
+                if (this.queueIndex >= this.sessionQueue.length) {
+                    return null;
+                }
+
+                const problem = this.sessionQueue[this.queueIndex];
+                this.queueIndex++;
+
+                return problem;
+            }
+
+            renderProblem() {
+                this.elProblem.firstChild.textContent = this.currentProblem.text;
+                this.elInput.value = '';
+                this.elInput.focus();
+                this.elFeedback.className = 'feedback';
+
+                this.resetAnswerTimer();
+
+                const pct = (this.totalQuestions / this.targetQuestions) * 100;
+                this.elProgress.style.width = `${Math.min(pct, 100)}%`;
+            }
+
+            resetAnswerTimer() {
+                if (this.answerTimer) {
+                    clearInterval(this.answerTimer);
+                }
+
+                const totalTime = 15000;
+                const intervalTime = 50;
+                let elapsed = 0;
+
+                this.elTimerBarFill.style.width = '100%';
+                this.elTimerBarFill.className = 'timer-bar-fill';
+
+                this.answerTimer = setInterval(() => {
+                    elapsed += intervalTime;
+                    const remaining = totalTime - elapsed;
+                    const pct = (remaining / totalTime) * 100;
+
+                    this.elTimerBarFill.style.width = `${pct}%`;
+
+                    if (pct < 30) {
+                        this.elTimerBarFill.className = 'timer-bar-fill danger';
+                    } else if (pct < 60) {
+                        this.elTimerBarFill.className = 'timer-bar-fill warning';
+                    }
+
+                    if (elapsed >= totalTime) {
+                        clearInterval(this.answerTimer);
+                        this.handleTimeout();
+                    }
+                }, intervalTime);
+            }
+
+            addErrorWeight(key) {
+                this.data.errors[key] = (Number(this.data.errors[key]) || 0) + ERROR_WEIGHT_ADD;
+                this.saveData();
+            }
+
+            reduceErrorWeight(key) {
+                if (!this.data.errors[key]) return;
+
+                this.data.errors[key] =
+                    Math.max(0, Number(this.data.errors[key]) - CORRECT_WEIGHT_SUBTRACT);
+
+                if (this.data.errors[key] <= 0) {
+                    delete this.data.errors[key];
+                }
+
+                this.saveData();
+            }
+
+
+            handleTimeout() {
+                const problem = this.currentProblem;
+
+                this.totalQuestions++;
+                this.errorCount++;
+                this.addErrorWeight(problem.key);
+                this.scheduleRetry(problem);
+
+                this.elFeedback.textContent = 'Время вышло!';
+                this.elFeedback.className = 'feedback visible wrong';
+                this.screens.game.classList.add('shake');
+                setTimeout(() => this.screens.game.classList.remove('shake'), 300);
+
                 setTimeout(() => {
-                    card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-        });
+                    this.elFeedback.textContent = `${problem.answer}`;
+                    this.elFeedback.className = 'feedback visible correct-answer-highlight';
+                }, 400);
+
+                this.elScore.textContent = `Ошибки: ${this.errorCount}`;
+
+                setTimeout(() => this.nextQuestion(), 1500);
+            }
+
+            start() {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                if (this.answerTimer) clearInterval(this.answerTimer);
+
+                this.errorCount = 0;
+                this.totalQuestions = 0;
+
+                this.sessionQueue = this.buildSessionQueue();
+                this.queueIndex = 0;
+
+                this.startTime = Date.now();
+
+                this.elTimer.textContent = '00:00';
+                this.elScore.textContent = 'Ошибки: 0';
+                this.elProgress.style.width = '0%';
+
+                this.showScreen('game');
+                this.updateTimer();
+                this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+
+                this.nextQuestion();
+            }
+
+            nextQuestion() {
+                const problem = this.getNextProblem();
+
+                if (!problem) {
+                    this.finish();
+                    return;
+                }
+
+                this.currentProblem = problem;
+                this.renderProblem();
+            }
+
+            checkAnswer() {
+                const userVal = parseInt(this.elInput.value);
+
+                if (isNaN(userVal)) return;
+
+                if (this.answerTimer) {
+                    clearInterval(this.answerTimer);
+                }
+
+                const problem = this.currentProblem;
+                const isCorrect = userVal === problem.answer;
+
+                this.totalQuestions++;
+
+                if (isCorrect) {
+                    this.handleSuccess();
+
+                    setTimeout(() => this.nextQuestion(), 600);
+                } else {
+                    this.handleError();
+
+                    setTimeout(() => this.nextQuestion(), 1500);
+                }
+
+                this.elScore.textContent = `Ошибки: ${this.errorCount}`;
+            }
+
+            handleSuccess() {
+                this.elFeedback.textContent = 'Верно!';
+                this.elFeedback.className = 'feedback visible correct';
+
+                // Правильный ответ постепенно закрывает слабое место.
+                this.reduceErrorWeight(this.currentProblem.key);
+            }
+
+            handleError() {
+                const problem = this.currentProblem;
+
+                this.errorCount++;
+                this.addErrorWeight(problem.key);
+
+                // Повтор не добавляет новый вопрос к уроку:
+                // он только заменяет один будущий обычный вопрос.
+                this.scheduleRetry(problem);
+
+                this.elFeedback.textContent = 'Ошибка!';
+                this.elFeedback.className = 'feedback visible wrong';
+                this.screens.game.classList.add('shake');
+                setTimeout(() => this.screens.game.classList.remove('shake'), 300);
+
+                setTimeout(() => {
+                    this.elFeedback.textContent = `${problem.answer}`;
+                    this.elFeedback.className = 'feedback visible correct-answer-highlight';
+                }, 400);
+            }
+
+            updateTimer() {
+                const delta = Math.floor((Date.now() - this.startTime) / 1000);
+                this.elTimer.textContent = this.formatDuration(delta);
+            }
+
+            formatDuration(totalSeconds) {
+                const seconds = Math.max(0, Math.round(Number(totalSeconds) || 0));
+                const minutes = Math.floor(seconds / 60);
+                const restSeconds = seconds % 60;
+
+                return `${minutes.toString().padStart(2, '0')}:${restSeconds.toString().padStart(2, '0')}`;
+            }
+
+            parseDuration(timeString) {
+                if (typeof timeString !== 'string') return 0;
+
+                const parts = timeString.split(':').map(Number);
+
+                if (parts.length !== 2 || parts.some(Number.isNaN)) return 0;
+
+                return parts[0] * 60 + parts[1];
+            }
+
+            getLocalDateKey(date = new Date()) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+
+                return `${year}-${month}-${day}`;
+            }
+
+            getDateFromKey(key) {
+                const [year, month, day] = key.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            }
+
+            getHistoryDateKey(item) {
+                // Новые записи имеют dateKey.
+                if (item.dateKey) return item.dateKey;
+
+                // Старые записи из предыдущей версии содержат ISO date.
+                if (item.date) {
+                    const date = new Date(item.date);
+
+                    if (!Number.isNaN(date.getTime())) {
+                        return this.getLocalDateKey(date);
+                    }
+                }
+
+                return null;
+            }
+
+            normalizeHistoryItem(item) {
+                const dateKey = this.getHistoryDateKey(item);
+
+                if (!dateKey) return null;
+
+                const total = Number.isFinite(Number(item.total))
+                    ? Number(item.total)
+                    : QUESTIONS_PER_SESSION;
+
+                const errors = Number.isFinite(Number(item.errors))
+                    ? Number(item.errors)
+                    : 0;
+
+                const correct = Number.isFinite(Number(item.correct))
+                    ? Number(item.correct)
+                    : Math.max(0, total - errors);
+
+                const duration = Number.isFinite(Number(item.duration))
+                    ? Number(item.duration)
+                    : this.parseDuration(item.time);
+
+                return {
+                    dateKey,
+                    total,
+                    correct,
+                    errors,
+                    duration
+                };
+            }
+
+            trimHistory() {
+                const cutoff = new Date();
+                cutoff.setHours(0, 0, 0, 0);
+                cutoff.setDate(cutoff.getDate() - HISTORY_DAYS_TO_KEEP);
+
+                this.data.history = this.data.history.filter(item => {
+                    const normalized = this.normalizeHistoryItem(item);
+
+                    if (!normalized) return false;
+
+                    return this.getDateFromKey(normalized.dateKey) >= cutoff;
+                });
+            }
+
+            getLastSevenDateKeys() {
+                const keys = [];
+                const today = new Date();
+
+                today.setHours(0, 0, 0, 0);
+
+                for (let offset = 6; offset >= 0; offset--) {
+                    const day = new Date(today);
+                    day.setDate(today.getDate() - offset);
+                    keys.push(this.getLocalDateKey(day));
+                }
+
+                return keys;
+            }
+
+            formatDateForTable(dateKey) {
+                return new Intl.DateTimeFormat('ru-RU', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: '2-digit'
+                }).format(this.getDateFromKey(dateKey));
+            }
+
+            getWeekSummary() {
+                const summary = {};
+
+                for (const item of this.data.history) {
+                    const normalized = this.normalizeHistoryItem(item);
+                    if (!normalized) continue;
+
+                    if (!summary[normalized.dateKey]) {
+                        summary[normalized.dateKey] = {
+                            sessions: 0,
+                            duration: 0,
+                            total: 0,
+                            correct: 0
+                        };
+                    }
+
+                    summary[normalized.dateKey].sessions++;
+                    summary[normalized.dateKey].duration += normalized.duration;
+                    summary[normalized.dateKey].total += normalized.total;
+                    summary[normalized.dateKey].correct += normalized.correct;
+                }
+
+                return summary;
+            }
+
+            renderWeeklyResults() {
+                const summary = this.getWeekSummary();
+                const todayKey = this.getLocalDateKey();
+
+                this.elWeeklyResultsBody.innerHTML = '';
+
+                for (const dateKey of this.getLastSevenDateKeys()) {
+                    const row = document.createElement('tr');
+
+                    if (dateKey === todayKey) {
+                        row.classList.add('today');
+                    }
+
+                    const day = summary[dateKey];
+
+                    if (!day) {
+                        row.innerHTML = `
+                    <td>${this.formatDateForTable(dateKey)}</td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                `;
+                    } else {
+                        row.innerHTML = `
+                    <td>${this.formatDateForTable(dateKey)}</td>
+                    <td>${day.sessions}</td>
+                    <td>${this.formatDuration(day.duration)}</td>
+                    <td>${day.correct} / ${day.total}</td>
+                `;
+                    }
+
+                    this.elWeeklyResultsBody.appendChild(row);
+                }
+            }
+
+            finish() {
+                clearInterval(this.timerInterval);
+
+                if (this.answerTimer) {
+                    clearInterval(this.answerTimer);
+                }
+
+                const duration = Math.max(
+                    1,
+                    Math.floor((Date.now() - this.startTime) / 1000)
+                );
+
+                const correctCount = this.targetQuestions - this.errorCount;
+
+                this.data.sessions++;
+
+                this.data.history.push({
+                    date: new Date().toISOString(),
+                    dateKey: this.getLocalDateKey(),
+                    duration,
+                    time: this.formatDuration(duration),
+                    total: this.targetQuestions,
+                    correct: correctCount,
+                    errors: this.errorCount
+                });
+
+                this.trimHistory();
+                this.saveData();
+
+                this.showScreen('result');
+
+                this.elResultStats.innerHTML = `
+            <div class="result-score">${correctCount} из ${this.targetQuestions} правильно</div>
+            <p>Время: ${this.formatDuration(duration)}<br>Ошибок: ${this.errorCount}</p>
+        `;
+
+                this.renderWeeklyResults();
+                this.updateStartScreen();
+            }
+        }
+
+        const game = new MathTrainer();
     </script>
 </body>
-</html>
